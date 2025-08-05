@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# DEFINIR GRUPO
+GROUPS=("desenvolvimento" "operacoes" "devops")
+DIR_BASE="/opt/projetos"
+
+# INPUT DE USUARIOS NO GRUPO
+echo "Digite os nomes dos usuários para o grupo 'desenvolvimento', separados por espaço:"
+read -a USERS_DEV
+echo ""
+echo "Digite os nomes dos usuários para o grupo 'operacoes', separados por espaço:"
+read -a USERS_OP
+echo ""
+echo "Digite os nomes dos usuários para o grupo 'devops', separados por espaço:"
+read -a USERS_DO
+echo ""
+
+# CRIAR GRUPOS NÃO EXISTENTES
+echo "Criando grupos de usuários..."
+for GROUP in "${GROUPS[@]}"; do
+    if ! getent group "$GROUP" > /dev/null; then
+        sudo groupadd "$GROUP"
+        echo "Grupo '$GROUP' criado."
+    else
+        echo "Grupo '$GROUP' já existe."
+    fi
+done
+
+# CRIAR OS USUARIOS E ADICIONAR GRUPOS
+echo ""
+echo "Criando usuários e adicionando aos grupos..."
+
+# CRIAÇÃO DE USUARIOS
+create_users() {
+    local GROUP_NAME="$1"
+    local USERS=("${@:2}")
+
+    for USER in "${USERS[@]}"; do
+        if ! id -u "$USER" > /dev/null 2>&1; then
+            sudo useradd -m -s /bin/bash -G "$GROUP_NAME" "$USER"
+            sudo passwd "$USER" 
+            echo "Usuário '$USER' criado e adicionado ao grupo '$GROUP_NAME'."
+        else
+            sudo usermod -aG "$GROUP_NAME" "$USER"
+            echo "Usuário '$USER' já existe, adicionado ao grupo '$GROUP_NAME'."
+        fi
+    done
+}
+
+# FUNÇÃO PARA CADA GRUPO
+if [ ${#USERS_DEV[@]} -gt 0 ]; then
+    create_users "desenvolvimento" "${USERS_DEV[@]}"
+fi
+
+if [ ${#USERS_OP[@]} -gt 0 ]; then
+    create_users "operacoes" "${USERS_OP[@]}"
+fi
+
+if [ ${#USERS_DO[@]} -gt 0 ]; then
+    create_users "devops" "${USERS_DO[@]}"
+fi
+
+# CRIAÇÃO DOS DIRETORIO E PERMISSÕES
+echo ""
+echo "Criando e configurando diretórios..."
+sudo mkdir -p "$DIR_BASE"
+sudo chown root:root "$DIR_BASE"
+sudo chmod 755 "$DIR_BASE"
+
+# AQUI SÃO OS DIRETORIO ESPECIFICOS PARA CADA 
+sudo mkdir -p "$DIR_BASE/desenvolvimento"
+sudo chown root:desenvolvimento "$DIR_BASE/desenvolvimento"
+sudo chmod 2775 "$DIR_BASE/desenvolvimento"
+
+sudo mkdir -p "$DIR_BASE/operacoes"
+sudo chown root:operacoes "$DIR_BASE/operacoes"
+sudo chmod 2775 "$DIR_BASE/operacoes"
+
+sudo mkdir -p "$DIR_BASE/devops"
+sudo chown root:devops "$DIR_BASE/devops"
+sudo chmod 2775 "$DIR_BASE/devops"
+
+echo ""
+echo "Configuração concluída com sucesso!"
