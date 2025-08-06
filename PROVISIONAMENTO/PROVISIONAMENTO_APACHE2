@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# ==================================================================================================
+# SCRIPT DE PROVISIONAMENTO AUTOMÁTICO DE SERVIDOR WEB (APACHE2)
+# Autor: Fagner Santos
+# Data: 05 de Agosto de 2025
+# Descrição: Este script automatiza a instalação e configuração básica do Apache2
+#            em um sistema Debian/Ubuntu.
+# ==================================================================================================
+
+echo "Iniciando o provisionamento do servidor web Apache2..."
+
+echo "Atualizando a lista de pacotes do sistema..."
+sudo apt-get update -y
+
+if [ $? -ne 0 ]; then
+    echo "Erro ao atualizar a lista de pacotes. Abortando o script."
+    exit 1
+fi
+
+# INSTALAÇÃO DO APACHE2
+echo "Instalando o servidor web Apache2..."
+sudo apt-get install apache2 -y
+
+if [ $? -ne 0 ]; then
+    echo "Erro ao instalar o Apache2. Abortando o script."
+    exit 1
+fi
+
+echo "Habilitando o Apache para iniciar automaticamente..."
+sudo systemctl enable apache2
+
+echo "Iniciando o serviço do Apache2..."
+sudo systemctl start apache2
+
+# CRIANDO PAGINA DA WEB
+echo "Criando uma página web de teste em /var/www/html/index.html..."
+sudo rm /var/www/html/index.html
+
+sudo cat > /var/www/html/index.html << EOL
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Servidor Web Provisionado!</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f0f0f0; }
+        h1 { color: #333; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Parabéns!</h1>
+    <p>O seu servidor web Apache foi provisionado com sucesso!</p>
+</body>
+</html>
+EOL
+
+echo "Página de teste criada. Você pode acessar o servidor pelo seu endereço IP."
+
+echo "----------------------------------------------------"
+echo "CONCLUÍDO!"
+echo "Verifique o status do Apache com o comando: sudo systemctl status apache2"
+echo "----------------------------------------------------"
